@@ -17,19 +17,13 @@ Xompile is a Visual Studio Code extension that helps you track code changes and 
 
 cd xompile 
 npm install
-content_copy
-Use code with caution.
-Bash
 
 2. **Build the Extension:**
 
 npm run build
 content_copy
-Use code with caution.
-Bash
-Running the Extension
 
-Open in VS Code: Open the xompile folder (the cloned repository) in Visual Studio Code.
+Running the Extension: Open in VS Code: Open the xompile folder (the cloned repository) in Visual Studio Code.
 
 3. **Start Debugging:**
 
