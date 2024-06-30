@@ -28,7 +28,7 @@ Running the Extension: Open in VS Code: Open the xompile folder (the cloned repo
 3. **Start Debugging:**
 
 * Press F5 or click the "Run and Debug" icon in the sidebar.
-* 
+
 * This will launch a new VS Code window called the "Extension Development Host".
 
 4. **Test the Extension:**
