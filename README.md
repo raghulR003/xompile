@@ -50,9 +50,3 @@ Feel free to open issues or pull requests if you encounter any problems or have 
 ## License
 
 This project is licensed under the MIT License.
-
-**Important Notes:**
-
-* **Replace Placeholders:** Update the repository URL (`your-username/xompile.git`), your name, and license information in the template above.
-* **Screenshots (Optional):** Adding screenshots or GIFs to your README can significantly improve its clarity, showing users what to expect.
-* **Specific Instructions:** If there are any special steps or gotchas involved in running your extension locally, make sure to document them clearly.
