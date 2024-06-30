@@ -15,33 +15,33 @@ Xompile is a Visual Studio Code extension that helps you track code changes and 
 
 2. **Install Dependencies:**
 
-cd xompile 
-npm install
+* cd xompile 
+* npm install
 
 2. **Build the Extension:**
 
-npm run build
-content_copy
+* npm run build
+
 
 Running the Extension: Open in VS Code: Open the xompile folder (the cloned repository) in Visual Studio Code.
 
 3. **Start Debugging:**
 
-Press F5 or click the "Run and Debug" icon in the sidebar.
-
-This will launch a new VS Code window called the "Extension Development Host".
+* Press F5 or click the "Run and Debug" icon in the sidebar.
+* 
+* This will launch a new VS Code window called the "Extension Development Host".
 
 4. **Test the Extension:**
 
-In the "Extension Development Host" window, open a folder containing .js, .ts, .py, or .java files.
+* In the "Extension Development Host" window, open a folder containing .js, .ts, .py, or .java files.
 
-Add numbered comments to your code (e.g., // 1: This is my comment).
+* Add numbered comments to your code (e.g., // 1: This is my comment).
 
-Use the commands from the Command Palette (Ctrl+Shift+P or Cmd+Shift+P):
+* Use the commands from the Command Palette (Ctrl+Shift+P or Cmd+Shift+P):
 
-"Xompile: Generate Report": Generates a Markdown report of your comment history.
+* "Xompile: Generate Report": Generates a Markdown report of your comment history.
 
-"Xompile: Rollback to Comment": Prompts for a comment number to roll back to.
+* "Xompile: Rollback to Comment": Prompts for a comment number to roll back to.
 
 ## Contributing
 
