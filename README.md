@@ -50,3 +50,11 @@ Feel free to open issues or pull requests if you encounter any problems or have 
 ## License
 
 This project is licensed under the MIT License.
+
+## To-Do:
+
+- [ ] To increase support for more languages
+- [ ] Code based inclusion and proper tagging
+- [ ] Timeline-based view for changes in the code, but simpler to understand
+- [ ] Custom implementation of code-to-guide via custom definitions, image support etc.
+- [ ] Collaboration between users via session tracking and central database implementation (Similar to Git, but more simplified)
