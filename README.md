@@ -1,8 +1,4 @@
-Here's a sample README.md file structure for your GitHub project, guiding users on how to install and run your VSCode extension locally:
-
 # Xompile: Your Code History Tracker
-
-**Description:** 
 
 Xompile is a Visual Studio Code extension that helps you track code changes and easily roll back to previous versions using numbered comments. It automatically generates Markdown reports of your comment history, making it easy to see how your code has evolved over time. 
 
@@ -17,14 +13,7 @@ Xompile is a Visual Studio Code extension that helps you track code changes and 
 
 1. **Prerequisites:** Make sure you have Node.js and npm (or yarn) installed on your system.
 
-2. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/your-username/xompile.git
-content_copy
-Use code with caution.
-Markdown
-
-Install Dependencies:
+2. **Install Dependencies:**
 
 cd xompile 
 npm install
@@ -32,7 +21,7 @@ content_copy
 Use code with caution.
 Bash
 
-Build the Extension:
+2. **Build the Extension:**
 
 npm run build
 content_copy
@@ -42,13 +31,13 @@ Running the Extension
 
 Open in VS Code: Open the xompile folder (the cloned repository) in Visual Studio Code.
 
-Start Debugging:
+3. **Start Debugging:**
 
 Press F5 or click the "Run and Debug" icon in the sidebar.
 
 This will launch a new VS Code window called the "Extension Development Host".
 
-Test the Extension:
+4. **Test the Extension:**
 
 In the "Extension Development Host" window, open a folder containing .js, .ts, .py, or .java files.
 
@@ -60,11 +49,11 @@ Use the commands from the Command Palette (Ctrl+Shift+P or Cmd+Shift+P):
 
 "Xompile: Rollback to Comment": Prompts for a comment number to roll back to.
 
-Contributing
+## Contributing
 
 Feel free to open issues or pull requests if you encounter any problems or have ideas for improvements.
 
-License
+## License
 
 This project is licensed under the MIT License.
 
@@ -73,7 +62,3 @@ This project is licensed under the MIT License.
 * **Replace Placeholders:** Update the repository URL (`your-username/xompile.git`), your name, and license information in the template above.
 * **Screenshots (Optional):** Adding screenshots or GIFs to your README can significantly improve its clarity, showing users what to expect.
 * **Specific Instructions:** If there are any special steps or gotchas involved in running your extension locally, make sure to document them clearly.
-
-Now, when you push this `README.md` file to your GitHub repository, visitors will have a step-by-step guide on how to get your VSCode extension up and running!
-content_copy
-Use code with caution.
