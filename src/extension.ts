@@ -1,23 +1,24 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import moment from 'moment';
-import * as path from 'path'; 
+import * as path from 'path';
 
 interface CommentEntry {
     lineNumber: number;
     comment: string;
     timestamp: number;
-    filePath: string; // Add filePath to store the file path of the comment
+    filePath: string;
+    codeReference?: string;
 }
 
 interface ChangeLog {
-    [key: string]: CommentEntry[]; // key: filename
+    [key: string]: CommentEntry[];
 }
 
 class CodeHistory {
     private changeLog: ChangeLog = {};
     private updateInterval: NodeJS.Timeout | null = null;
-    private supportedExtensions: string[] = ['.js', '.ts', '.py', '.java']; // Add supported extensions
+    private supportedExtensions: string[] = ['.js', '.ts', '.py', '.java'];
 
     constructor() {
         this.startUpdateInterval();
@@ -27,28 +28,52 @@ class CodeHistory {
         const comments: CommentEntry[] = [];
         const lineCount = document.lineCount;
         const languageId = document.languageId;
-        const filePath = document.fileName; // Get the file path
-
+        const filePath = document.fileName;
         const commentRegex = this.getCommentRegex(languageId);
+        const codeBlockStartRegex = /\/\/\[!!\]/;
+        const codeBlockEndRegex = /\/\/\[-!!-\]/;
+
         if (!commentRegex) {
             console.warn(`Unsupported language for comment extraction: ${languageId}`);
             return comments;
         }
 
+        let codeReferenceCounter = 1;
+        let codeBlockLines: string[] = []; // Store code block lines
+
         for (let line = 0; line < lineCount; line++) {
-            const text = document.lineAt(line).text.trim();
+            const text = document.lineAt(line).text;
             const match = text.match(commentRegex);
-            if (match) {
+
+            if (codeBlockStartRegex.test(text)) {
+                codeBlockLines = []; // Start a new code block
+            } else if (codeBlockEndRegex.test(text)) {
+                // End of code block, associate with previous comment
+                const codeBlock = codeBlockLines.join('\n'); 
+                comments.forEach(comment => {
+                    if (!comment.codeReference) {
+                        comment.codeReference = `[Code Reference ${codeReferenceCounter}](#code-${codeReferenceCounter})`;
+                        codeReferenceCounter++; 
+                    }
+                });
+            } else if (match) {
                 comments.push({
                     lineNumber: line + 1,
                     comment: match[2].trim(),
                     timestamp: Date.now(),
-                    filePath: filePath, // Store the file path
+                    filePath: filePath,
+                    codeReference: `[Code Reference ${codeReferenceCounter}](#code-${codeReferenceCounter++})` 
                 });
+            } else {
+                // Accumulate code lines if within a code block
+                if (codeBlockLines.length > 0 || comments.some(c => !c.codeReference)) {
+                    codeBlockLines.push(text);
+                }
             }
         }
         return comments;
     }
+
 
     private getCommentRegex(languageId: string | undefined): RegExp | null {
         switch (languageId) {
@@ -64,8 +89,8 @@ class CodeHistory {
         }
     }
 
-    public async updateChangeLog(): Promise<void> { 
-        this.changeLog = {}; // Reset the changeLog
+    public async updateChangeLog(): Promise<void> {
+        this.changeLog = {};
 
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
@@ -80,7 +105,7 @@ class CodeHistory {
     private async updateChangeLogForFolder(folderUri: vscode.Uri): Promise<void> {
         const files = await vscode.workspace.findFiles(
             new vscode.RelativePattern(folderUri, `**/*{${this.supportedExtensions.join(',')}}`),
-            '**/node_modules/**' // Exclude node_modules folder
+            '**/node_modules/**' 
         );
 
         for (const file of files) {
@@ -98,33 +123,60 @@ class CodeHistory {
 
         const reportDir = `${workspacePath}/.code-history`;
         const dateStr = moment().format('YYYY-MM-DD');
-        const reportFilePath = `${reportDir}/${dateStr}.md`;
+        const docReportFilePath = `${reportDir}/${dateStr}_doc.md`;
+        const codeReportFilePath = `${reportDir}/${dateStr}_code.md`;
 
         if (!fs.existsSync(reportDir)) {
             fs.mkdirSync(reportDir);
         }
 
-        let markdownContent = `# Code History - ${dateStr}\n\n`;
+        let markdownContentDoc = `# Code Documentation - ${dateStr}\n\n`;
+        let markdownContentCode = `# Code Snippets - ${dateStr}\n\n`;
+        let codeReferenceCounter = 1;
 
         for (const filePath in this.changeLog) {
             const comments = this.changeLog[filePath];
-            if (comments.length > 0) { // Only include files with comments
-                markdownContent += `## [${path.basename(filePath)}](${vscode.Uri.file(filePath).with({ scheme: 'file' }).toString()})\n\n`; // File name with link
+
+            if (comments.length > 0) {
+                markdownContentDoc += `## [${path.basename(filePath)}](${vscode.Uri.file(filePath).with({ scheme: 'file' }).toString()})\n\n`;
+
                 comments.forEach(entry => {
-                    markdownContent += `- Line ${entry.lineNumber}: ${entry.comment} (**${moment(entry.timestamp).format('HH:mm:ss')}**) \n`;
+                    markdownContentDoc += `- ${entry.codeReference} Line ${entry.lineNumber}: ${entry.comment} (**${moment(entry.timestamp).format('HH:mm:ss')}**)\n`;
                 });
-                markdownContent += '\n';
+                markdownContentDoc += '\n';
+
+                comments.forEach((entry, index) => {
+                    if (entry.codeReference) {
+                        const nextComment = comments[index + 1]; // Get the next comment
+
+                        markdownContentCode += `## <a id="code-${codeReferenceCounter}"></a> [Go to Doc Reference ${codeReferenceCounter}](${docReportFilePath}#${entry.codeReference.replace(/ /g, '-').toLowerCase()})\n\n`;
+                        markdownContentCode += `\`\`\`${this.getFileExtension(filePath)}\n`;
+                        markdownContentCode += `// Code From: ${filePath}\n`;
+                        markdownContentCode += `// Line: ${entry.lineNumber}\n\n`;
+                        markdownContentCode += `${entry.comment}\n\n`;
+                        markdownContentCode += `\`\`\`\n\n`;
+                        codeReferenceCounter++;
+                    }
+                });
             }
         }
 
-        fs.writeFile(reportFilePath, markdownContent, err => {
+        fs.writeFile(docReportFilePath, markdownContentDoc, err => {
             if (err) {
-                vscode.window.showErrorMessage("Error writing report: " + err);
+                vscode.window.showErrorMessage("Error writing documentation report: " + err);
                 return;
             }
-            vscode.window.showInformationMessage("Code history report generated!");
+        });
+
+        fs.writeFile(codeReportFilePath, markdownContentCode, err => {
+            if (err) {
+                vscode.window.showErrorMessage("Error writing code report: " + err);
+                return;
+            }
+            vscode.window.showInformationMessage("Code history reports generated!");
         });
     }
+
 
     public rollbackToComment(filename: string, commentNumber: number): void {
         const entries = this.changeLog[filename];
@@ -140,24 +192,20 @@ class CodeHistory {
             return;
         }
 
-        // Get the active text editor
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showErrorMessage("No active editor.");
             return;
         }
 
-        // Ensure you are editing the correct file!
         if (editor.document.fileName !== filename) {
             vscode.window.showErrorMessage(`Please open ${filename} to rollback.`);
             return;
         }
 
-        // Assuming you want to revert to the state before the comment:
         const rollbackPosition = new vscode.Position(targetEntry.lineNumber - 1, 0);
         const rollbackRange = new vscode.Range(rollbackPosition, editor.document.lineAt(targetEntry.lineNumber - 1).range.end);
 
-        // Replace with an empty string to effectively delete
         editor.edit(editBuilder => {
             editBuilder.replace(rollbackRange, '');
         });
@@ -167,7 +215,7 @@ class CodeHistory {
 
     private startUpdateInterval(): void {
         this.updateInterval = setInterval(async () => {
-            await this.updateChangeLog(); // Update all files in the workspace
+            await this.updateChangeLog();
         }, 20000);
     }
 
@@ -176,6 +224,10 @@ class CodeHistory {
             clearInterval(this.updateInterval);
         }
     }
+
+    private getFileExtension(filePath: string): string {
+        return path.extname(filePath).replace('.', '');
+    }
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -183,13 +235,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.commands.registerCommand('xompile.generateReport', async () => {
-            await codeHistory.updateChangeLog(); // Update before generating
+            await codeHistory.updateChangeLog();
             codeHistory.generateMarkdownReport();
         }),
         vscode.commands.registerCommand('xompile.rollbackToComment', async () => {
             const filename = vscode.window.activeTextEditor?.document.fileName;
             if (!filename) {
-                return; // No active editor
+                return;
             }
 
             const commentNumberStr = await vscode.window.showInputBox({
